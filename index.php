@@ -1,3 +1,6 @@
+<?php
+require 'query.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,11 +9,8 @@
     <title>Event Booking System</title>
 </head>
 <body>
-    <?php
-        echo "This is an Event Booking System";
-    ?> 
-    <form>
-        <h1>Register</h1>
+    <h1>Register</h1>
+    <?php echo '<form method="POST" action="'.register($conn).'">'; ?>
         <label for="fname">First name:</label><br>
         <input type="text" id="fname" name="fname" required placeholder="Firstname"><br><br>
 
@@ -34,8 +34,7 @@
         </select><br><br>
         
         <button id="submit">Submit</button> 
-    </form>
-    <p>Already have an account? Login <a href="login.php">here</a></p>
+    </form>  
     <p>Already have an account? Login <a href="login.php">here</a></p>
 </body>
 </html>

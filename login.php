@@ -1,3 +1,6 @@
+<?php
+require 'query.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,13 +9,10 @@
     <title>Document</title>
 </head>
 <body>
-    <?php
-        echo "This is the log in page."
-    ?>
-    <form>
-        <h1>Login</h1>
+<h1>Login</h1>
 
-        <label for="email">Email:</label><br>
+    <?php echo '<form method="POST" action="'.login($conn).'">'; ?>
+        <br><label for="email">Email:</label><br>
         <input type="email" id="email" name="email" required placeholder="example@domain.com"><br><br>
 
         <label for="password">Password:</label><br>
