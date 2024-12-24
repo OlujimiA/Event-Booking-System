@@ -28,6 +28,7 @@ require 'query.php';
         
         <label for="ptype">What describes you best?</label><br>
         <select name="ptype" id="ptype">
+            <option value="" disabled selected>Choose what describes you best</option>
             <option value="Student">Student</option>
             <option value="Teacher">Teacher</option>
             <option value="Other">Other</option>
@@ -35,7 +36,8 @@ require 'query.php';
         
         <button id="submit">Submit</button> 
     </form>  
-    <p>Already have an account? Login <a href="login.php">here</a></p>
+    <p>Already have an account? Login <a href="login.php" title="Go to our login page">here</a></p>
 </body>
 </html>
+
 
