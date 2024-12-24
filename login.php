@@ -6,7 +6,7 @@ require 'query.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>LogIn page</title>
 </head>
 <body>
 <h1>Login</h1>
@@ -18,7 +18,7 @@ require 'query.php';
         <label for="password">Password:</label><br>
         <input type="password" id="password" name="password" required><br><br>
 
-        <button id="login">Login</button> 
+        <button href="event.php" id="login">Login</button> 
     </form>
     <p>Don't have an account? Create one <a href="index.php">here</a><p>
 </body>

@@ -33,6 +33,8 @@ function register($conn) {
 
 // Login function
 function login($conn) {
+    $email = '';
+
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $email = mysqli_real_escape_string($conn, $_POST['email']);
         $password = mysqli_real_escape_string($conn, $_POST['password']);
@@ -42,6 +44,7 @@ function login($conn) {
 
         if (mysqli_num_rows($result) > 0) {
             echo "Login successful!<br>";
+            header('Location: event.php');
         } else {
             echo "Invalid registration number or password.";
         }
