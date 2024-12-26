@@ -79,6 +79,21 @@ function login($conn) {
         
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+
+    switch ($action) {
+        case 'event':
+            event($conn);
+            break;
+            
+        default:
+            echo "";
+    }
+}
+
+
+
 function event($conn){
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $EventName = mysqli_real_escape_string($conn, $_POST['name']);
@@ -119,7 +134,7 @@ function event($conn){
 
 function your_events($conn) {
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $EventName = mysqli_real_escape_string($conn, $_POST['your_events']);
+        
 
         $sql = 'SELECT * FROM EVENTS';
         $result = mysqli_query($conn, $sql);

@@ -15,6 +15,7 @@
     
     <form method="POST" id="content-area" action="">
         <button id='createEvent' onclick="hideButton()" name='create_event'>Create event</button>
+        
     </form>
     
     <script>
@@ -42,6 +43,8 @@
                 <option value="public">Public</option>
                 <option value="private">Private</option>
             </select><br><br>
+            
+            <input type="hidden" name="action" value="event">
 
             <button id="submit">Submit</button><br><br>
            
@@ -59,13 +62,22 @@
     
     <form method="post" action="">
         <input type="submit" id="your_events"name="your_events" value="See your events">
+        <input type="hidden" name="action" value="your_events">
     </form>
 
     <div>
         <?php 
-        // Display the events below the button
-        if ($_SERVER["REQUEST_METHOD"] === "POST") {
-            echo your_events($conn);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? '';
+        
+            switch ($action) {
+                case 'your_events':
+                    your_events($conn);
+                    break;
+                
+                default:
+                    echo "";
+            }
         }
         ?>
     </div>
