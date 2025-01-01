@@ -1,5 +1,6 @@
 <?php
 require 'conn.php';
+session_start();
 
 // Registration function
 function register($conn) {
@@ -43,6 +44,13 @@ function login($conn) {
         $result = mysqli_query($conn, $sql3);
 
         if (mysqli_num_rows($result) > 0) {
+            $user = mysqli_fetch_assoc($result);
+
+            // Store user information in session
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_name'] = $user['firstname'] . ' ' . $user['lastname'];
+
             echo "Login successful!<br>";
             header('Location: event.php');
         } else {
@@ -86,6 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'event':
             event($conn);
             break;
+        
+        case 'Logout':
+            logout($conn);
+            break;
             
         default:
             echo "";
@@ -102,6 +114,8 @@ function event($conn){
         $time = mysqli_real_escape_string($conn, $_POST['time']);
         $Location = mysqli_real_escape_string($conn, $_POST['location']);
         $Visibility = mysqli_real_escape_string($conn, $_POST['visibility']);
+        $booking_cap = mysqli_real_escape_string($conn, $_POST['capc']);
+        
 
         $sql = 'CREATE TABLE IF NOT EXISTS EVENTS(
                 id int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -111,16 +125,21 @@ function event($conn){
                 time TIME NOT NULL,
                 location VARCHAR(500) NOT NULL,
                 visibility VARCHAR(60) NOT NULL,
-                time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP)';
+                time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                booking_cap int(30),
+                email VARCHAR(320) NOT NULL 
+                )';
         
         if (mysqli_query($conn, $sql)){
             echo "Events table has been created successfully!";
         } else{
             echo "Error: " . mysqli_error($conn);
         }
+        
+        $email = $_SESSION['user_email'] ?? '';
 
-        $sql2 = "INSERT INTO EVENTS(name, description, date, time, location, visibility)
-                VALUES('$EventName', '$EventDescription', '$date', '$time', '$Location', '$Visibility')";
+        $sql2 = "INSERT INTO EVENTS(name, description, date, time, location, visibility, booking_cap, email)
+                VALUES('$EventName', '$EventDescription', '$date', '$time', '$Location', '$Visibility', '$booking_cap', '$email')";
         
         if (mysqli_query($conn, $sql2)){
             echo "Event has been added to the Events table successfully!";
@@ -134,9 +153,9 @@ function event($conn){
 
 function your_events($conn) {
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        
+        $email = $_SESSION['user_email'] ?? '';
 
-        $sql = 'SELECT * FROM EVENTS';
+        $sql = "SELECT * FROM EVENTS WHERE email = '$email'";
         $result = mysqli_query($conn, $sql);
 
         if (mysqli_num_rows($result) > 0) {
@@ -157,4 +176,39 @@ function your_events($conn) {
     }
 }
 
+function logout($conn) {
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        session_start();
+        session_unset(); // Unset all session variables
+        session_destroy(); // Destroy the session
+
+        header('Location: login.php');
+        exit();
+    }
+}
+
+function public_events($conn){
+    if($_SERVER["REQUEST_METHOD"] === "POST"){
+        $sql = "SELECT * FROM EVENTS WHERE visibility = 'public'";
+        $result = mysqli_query($conn,$sql);
+
+        if (mysqli_num_rows($result) > 0) {
+            echo "<br>";
+            while ($row = mysqli_fetch_assoc($result)) {
+                echo "Event Name: ".$row['name']."<br>";
+                echo "Description: ".$row['description']."<br>";
+                echo "Date: ".$row['date']."<br>";
+                echo "Time: ".$row['time']."<br>";
+                echo "Location: ".$row['location']."<br>";
+                // echo "Visibility: ".$row['visibility']."<br><br>";
+            ?>
+                <input type="submit" value="RSVP"><br><br>
+            <?php
+            }
+            
+        } else {
+            echo "<p>No events found</p>";
+        }
+    }
+}
 ?>
