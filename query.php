@@ -12,6 +12,9 @@ function register($conn) {
         $UserType = mysqli_real_escape_string($conn, $_POST['ptype']);
         $password = mysqli_real_escape_string($conn, $_POST['password']);
 
+        // Hash the password
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        
         // Check for duplicate email or reg
         $check_sql = "SELECT * FROM USERS WHERE email = '$email'";
         $result = mysqli_query($conn, $check_sql);
@@ -46,10 +49,13 @@ function login($conn) {
         if (mysqli_num_rows($result) > 0) {
             $user = mysqli_fetch_assoc($result);
 
+        // Verify the password
+        if (password_verify($password, $user['password'])) {
             // Store user information in session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_name'] = $user['firstname'] . ' ' . $user['lastname'];
+        }
 
             echo "Login successful!<br>";
             header('Location: event.php');
