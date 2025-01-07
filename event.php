@@ -78,17 +78,21 @@
         </div>
         
         <br><input type="submit" id="logout" name="action" value="Logout">
-        <!-- <input type="hidden" name="action" value="logout"> -->
+        <!-- <input type
+         ="hidden" name="action" value="logout"> -->
     </form><br>
     
     <div style="border-top: 2px solid black; border-bottom: 2px solid black;">
         <h2>Your Upcoming events</h2>
-        
+
         <?php
             // Check if the form has been submitted and the action is 'RSVP'
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'RSVP') {
                 // Display the RSVP-specific events
                 up_events($conn);
+            } elseif($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'cancel') {
+                // Delete events/Cancel booking
+                delete_rsvp($conn);
             } else {
                 // By default, show upcoming events
                 upc_events($conn);

@@ -124,7 +124,7 @@ function event($conn){
         
 
         $sql = 'CREATE TABLE IF NOT EXISTS EVENTS(
-                id int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
                 name VARCHAR(30) NOT NULL,
                 description VARCHAR(500) NOT NULL,
                 date DATE NOT NULL,
@@ -195,7 +195,11 @@ function logout($conn) {
 
 function public_events($conn){
     if($_SERVER["REQUEST_METHOD"] === "POST"){
-        $sql = "SELECT * FROM EVENTS WHERE visibility = 'public'";
+        $sql = "SELECT * FROM EVENTS WHERE visibility = 'public' AND NOT EXISTS (
+                  SELECT 1 
+                  FROM RSVP
+                  WHERE RSVP.id = EVENTS.id
+              )";
         $result = mysqli_query($conn,$sql);
 
         if (mysqli_num_rows($result) > 0) {
@@ -208,6 +212,7 @@ function public_events($conn){
                 echo "Location: ".$row['location']."<br>";
                 // echo "Visibility: ".$row['visibility']."<br><br>";
                 echo "<form method='POST' action=''>";
+                echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['id']) . "'>";
                 echo "<input type='hidden' name='name' value='" . htmlspecialchars($row['name']) . "'>";
                 echo "<input type='hidden' name='description' value='" . htmlspecialchars($row['description']) . "'>";
                 echo "<input type='hidden' name='date' value='" . htmlspecialchars($row['date']) . "'>";
@@ -228,6 +233,7 @@ function up_events($conn){
     $email = $_SESSION['user_email'] ?? '';
 
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
         $name = mysqli_real_escape_string($conn, $_POST['name']);
         $description = mysqli_real_escape_string($conn, $_POST['description']);
         $date = mysqli_real_escape_string($conn, $_POST['date']);
@@ -238,7 +244,7 @@ function up_events($conn){
     
         // Insert event details into the RSVP table
         $sql = "CREATE TABLE IF NOT EXISTS RSVP(
-                id int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                id CHAR(36) PRIMARY KEY,
                 name VARCHAR(30) NOT NULL,
                 description VARCHAR(500) NOT NULL,
                 date DATE NOT NULL,
@@ -254,8 +260,8 @@ function up_events($conn){
             echo "Error: " . mysqli_error($conn);
         }
 
-        $sql2 = "INSERT INTO RSVP (name, description, date, time, location, booking_cap, email) 
-                 VALUES ('$name', '$description', '$date', '$time', '$location', '$booking_cap', '$email')";
+        $sql2 = "INSERT INTO RSVP (id, name, description, date, time, location, booking_cap, email) 
+                 VALUES ('$id', '$name', '$description', '$date', '$time', '$location', '$booking_cap', '$email')";
         
         if (mysqli_query($conn, $sql2)){
             echo "Event has been added to the RSVP table successfully!";
@@ -273,7 +279,12 @@ function up_events($conn){
                 echo "Description: ".$row['description']."<br>";
                 echo "Date: ".$row['date']."<br>";
                 echo "Time: ".$row['time']."<br>";
-                echo "Location: ".$row['location']."<br><br>";
+                echo "Location: ".$row['location']."<br>";
+
+                echo "<form method='POST' action=''>";
+                echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['id']) . "'>";
+                echo "<input type='submit' name='action' value='cancel'><br><br>";
+                echo "</form>";
             }
         } else {
             echo "No events found";
@@ -284,21 +295,58 @@ function up_events($conn){
 
 function upc_events($conn){
     $email = $_SESSION['user_email'] ?? '';
+
+    $sql = "CREATE TABLE IF NOT EXISTS RSVP(
+        id CHAR(36) PRIMARY KEY,
+        name VARCHAR(30) NOT NULL,
+        description VARCHAR(500) NOT NULL,
+        date DATE NOT NULL,
+        time TIME NOT NULL,
+        location VARCHAR(500) NOT NULL,
+        time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        booking_cap int(30),
+        email VARCHAR(320) NOT NULL)";
+
+    if (mysqli_query($conn, $sql)){
+        echo "Created RSVP table!";
+    } else{
+        echo "Error: " . mysqli_error($conn);
+    }
+
     $sql3 = "SELECT * FROM RSVP WHERE email = '$email'";
     $result = mysqli_query($conn, $sql3);
 
-        if (mysqli_num_rows($result) > 0) {
+    if (mysqli_num_rows($result) > 0) {
 
-            while ($row = mysqli_fetch_assoc($result)) {
-                echo "Event Name: ".$row['name']."<br>";
-                echo "Description: ".$row['description']."<br>";
-                echo "Date: ".$row['date']."<br>";
-                echo "Time: ".$row['time']."<br>";
-                echo "Location: ".$row['location']."<br><br>";
-            }
-        } else {
-            echo "Your RSVP'd events will appear here!";
+        while ($row = mysqli_fetch_assoc($result)) {
+            echo "Event Name: ".$row['name']."<br>";
+            echo "Description: ".$row['description']."<br>";
+            echo "Date: ".$row['date']."<br>";
+            echo "Time: ".$row['time']."<br>";
+            echo "Location: ".$row['location']."<br><br>";
+
+            echo "<form method='POST' action=''>";
+            echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['id']) . "'>";
+            echo "<input type='submit' name='action' value='cancel'><br><br>";
+            echo "</form>";
         }
+    } else {
+        echo "Your RSVP'd events will appear here!";
+    }
+}
+
+function delete_rsvp($conn){
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
+
+        $sql = "DELETE FROM RSVP WHERE id = '$id'";
+
+        if (mysqli_query($conn, $sql)){
+            echo "Canceled your booking :(";
+        } else{
+            echo "Error: " . mysqli_error($conn);
+        }
+    }
 }
 
 ?>
