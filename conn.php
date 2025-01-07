@@ -13,7 +13,7 @@ $sql = "CREATE TABLE IF NOT EXISTS USERS (
     lastname VARCHAR(50) NOT NULL,
     phone_number INT(11) UNIQUE,
     email VARCHAR(30) NOT NULL UNIQUE,
-    password VARCHAR(40) NOT NULL,
+    password VARCHAR(200) NOT NULL,
     user_type VARCHAR(15) NOT NULL,
     reg_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )";

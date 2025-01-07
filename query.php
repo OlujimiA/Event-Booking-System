@@ -24,10 +24,11 @@ function register($conn) {
         } else {
             // Insert new user
             $sql = "INSERT INTO USERS (firstname, lastname, email, phone_number, user_type, password)
-                    VALUES ('$firstname', '$lastname', '$email', '$pnumber', '$UserType', '$password')";
+                    VALUES ('$firstname', '$lastname', '$email', '$pnumber', '$UserType', '$hashed_password')";
 
             if (mysqli_query($conn, $sql)) {
                 echo "Registration successful!";
+                header('Location: login.php');
             } else {
                 echo "Error: " . mysqli_error($conn);
             }
@@ -43,53 +44,52 @@ function login($conn) {
         $email = mysqli_real_escape_string($conn, $_POST['email']);
         $password = mysqli_real_escape_string($conn, $_POST['password']);
 
-        $sql3 = "SELECT * FROM USERS WHERE email = '$email' AND password = '$password'";
+        $sql3 = "SELECT * FROM USERS WHERE email = '$email'";
         $result = mysqli_query($conn, $sql3);
 
         if (mysqli_num_rows($result) > 0) {
             $user = mysqli_fetch_assoc($result);
+            // Verify the password
+            if (password_verify($password, $user['password'])) {
+                // Store user information in session
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_name'] = $user['firstname'] . ' ' . $user['lastname'];
+        
+                echo "Login successful!<br>";
+                header('Location: event.php');
+                
+                $sql = 'CREATE TABLE IF NOT EXISTS LOGS(
+                    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    firstname VARCHAR(50) NOT NULL,
+                    lastname VARCHAR(50) NOT NULL,
+                    email VARCHAR(30) NOT NULL,
+                    last_loggedin TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )';
+            
+                    if (mysqli_query($conn, $sql)) {
+                        echo "LOG table has been created<br>";
+                    } else {
+                        echo "Error: " . mysqli_error($conn);
+                    }
+                    
+                    $sql2 = "INSERT INTO LOGS(firstname, lastname, email)
+                            VALUES ('" . $user['firstname'] . "', '" . $user['lastname'] . "', '" . $email . "')";
+            
+                    if (mysqli_query($conn, $sql2)){
+                        echo "LOGS table has been updated!<br>";
+                    }else {
+                        echo "Error: ". mysqli_error($conn);
+                    }
 
-        // Verify the password
-        if (password_verify($password, $user['password'])) {
-            // Store user information in session
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_email'] = $user['email'];
-            $_SESSION['user_name'] = $user['firstname'] . ' ' . $user['lastname'];
-        }
+            } else {
+                echo "Invalid password!";
+            }
 
-            echo "Login successful!<br>";
-            header('Location: event.php');
         } else {
-            echo "Invalid registration number or password.";
+            echo "Account associated with that email does not exist.";
         }
     }
-
-        $sql = 'CREATE TABLE IF NOT EXISTS LOGS(
-        id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        firstname VARCHAR(50) NOT NULL,
-        lastname VARCHAR(50) NOT NULL,
-        email VARCHAR(30) NOT NULL,
-        last_loggedin TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-        )';
-
-        if (mysqli_query($conn, $sql)) {
-            echo "LOG table has been created<br>";
-        } else {
-            echo "Error: " . mysqli_error($conn);
-        }
-        
-        $sql2 = "INSERT INTO LOGS(firstname, lastname, email)
-                SELECT firstname, lastname, email
-                FROM USERS
-                WHERE email= '$email'
-                ON DUPLICATE KEY UPDATE last_loggedin = VALUES(last_loggedin)";
-
-        if (mysqli_query($conn, $sql2)){
-            echo "LOGS table has been updated!<br>";
-        }else {
-            echo "Error: ". mysqli_error($conn);
-        }
-
         
 }
 
@@ -217,4 +217,9 @@ function public_events($conn){
         }
     }
 }
+
+function up_events($conn){
+   return "Your RSVP'd events will be displayed here!"; 
+}
+
 ?>
