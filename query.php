@@ -207,9 +207,15 @@ function public_events($conn){
                 echo "Time: ".$row['time']."<br>";
                 echo "Location: ".$row['location']."<br>";
                 // echo "Visibility: ".$row['visibility']."<br><br>";
-            ?>
-                <input type="submit" value="RSVP"><br><br>
-            <?php
+                echo "<form method='POST' action=''>";
+                echo "<input type='hidden' name='name' value='" . htmlspecialchars($row['name']) . "'>";
+                echo "<input type='hidden' name='description' value='" . htmlspecialchars($row['description']) . "'>";
+                echo "<input type='hidden' name='date' value='" . htmlspecialchars($row['date']) . "'>";
+                echo "<input type='hidden' name='time' value='" . htmlspecialchars($row['time']) . "'>";
+                echo "<input type='hidden' name='location' value='" . htmlspecialchars($row['location']) . "'>";
+                echo "<input type='hidden' name='booking_cap' value='" . htmlspecialchars($row['booking_cap']) . "'>";
+                echo "<input type='submit' name='action' value='RSVP'><br><br>";
+                echo "</form>";
             }
             
         } else {
@@ -219,7 +225,80 @@ function public_events($conn){
 }
 
 function up_events($conn){
-   return "Your RSVP'd events will be displayed here!"; 
+    $email = $_SESSION['user_email'] ?? '';
+
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $name = mysqli_real_escape_string($conn, $_POST['name']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        $date = mysqli_real_escape_string($conn, $_POST['date']);
+        $time = mysqli_real_escape_string($conn, $_POST['time']);
+        $location = mysqli_real_escape_string($conn, $_POST['location']);
+        $booking_cap = mysqli_real_escape_string($conn, $_POST['booking_cap']);
+
+    
+        // Insert event details into the RSVP table
+        $sql = "CREATE TABLE IF NOT EXISTS RSVP(
+                id int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(30) NOT NULL,
+                description VARCHAR(500) NOT NULL,
+                date DATE NOT NULL,
+                time TIME NOT NULL,
+                location VARCHAR(500) NOT NULL,
+                time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                booking_cap int(30),
+                email VARCHAR(320) NOT NULL)";
+        
+        if (mysqli_query($conn, $sql)){
+            echo "Created RSVP table!";
+        } else{
+            echo "Error: " . mysqli_error($conn);
+        }
+
+        $sql2 = "INSERT INTO RSVP (name, description, date, time, location, booking_cap, email) 
+                 VALUES ('$name', '$description', '$date', '$time', '$location', '$booking_cap', '$email')";
+        
+        if (mysqli_query($conn, $sql2)){
+            echo "Event has been added to the RSVP table successfully!";
+        } else{
+            echo "Error: " . mysqli_error($conn);
+        }
+
+        $sql3 = "SELECT * FROM RSVP WHERE email = '$email'";
+        $result = mysqli_query($conn,$sql3);
+
+        if (mysqli_num_rows($result) > 0) {
+            echo "<br><br>";
+            while ($row = mysqli_fetch_assoc($result)) {
+                echo "Event Name: ".$row['name']."<br>";
+                echo "Description: ".$row['description']."<br>";
+                echo "Date: ".$row['date']."<br>";
+                echo "Time: ".$row['time']."<br>";
+                echo "Location: ".$row['location']."<br><br>";
+            }
+        } else {
+            echo "No events found";
+        }
+    }
+    
+}
+
+function upc_events($conn){
+    $email = $_SESSION['user_email'] ?? '';
+    $sql3 = "SELECT * FROM RSVP WHERE email = '$email'";
+    $result = mysqli_query($conn, $sql3);
+
+        if (mysqli_num_rows($result) > 0) {
+
+            while ($row = mysqli_fetch_assoc($result)) {
+                echo "Event Name: ".$row['name']."<br>";
+                echo "Description: ".$row['description']."<br>";
+                echo "Date: ".$row['date']."<br>";
+                echo "Time: ".$row['time']."<br>";
+                echo "Location: ".$row['location']."<br><br>";
+            }
+        } else {
+            echo "Your RSVP'd events will appear here!";
+        }
 }
 
 ?>
