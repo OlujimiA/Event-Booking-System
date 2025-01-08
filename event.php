@@ -90,9 +90,12 @@
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'RSVP') {
                 // Display the RSVP-specific events
                 up_events($conn);
-            } elseif($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'cancel') {
-                // Delete events/Cancel booking
+            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'cancel') {
+                // Delete rsvp/Cancel booking
                 delete_rsvp($conn);
+            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+                // Delete your event
+                delete_your_event($conn);
             } else {
                 // By default, show upcoming events
                 upc_events($conn);

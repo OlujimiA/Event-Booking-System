@@ -124,7 +124,8 @@ function event($conn){
         
 
         $sql = 'CREATE TABLE IF NOT EXISTS EVENTS(
-                id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+                id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                event_id CHAR(36) NOT NULL DEFAULT (UUID()),
                 name VARCHAR(30) NOT NULL,
                 description VARCHAR(500) NOT NULL,
                 date DATE NOT NULL,
@@ -173,6 +174,11 @@ function your_events($conn) {
                 echo "Time: ".$row['time']."<br>";
                 echo "Location: ".$row['location']."<br>";
                 echo "Visibility: ".$row['visibility']."<br><br>";
+
+                echo "<form method='POST' action=''>";
+                echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['event_id']) . "'>";
+                echo "<input type='submit' name='action' value='delete'><br><br>";
+                echo "</form>";
             }
             
         } else {
@@ -194,33 +200,46 @@ function logout($conn) {
 }
 
 function public_events($conn){
+    $email = $_SESSION['user_email'] ?? '';
     if($_SERVER["REQUEST_METHOD"] === "POST"){
+
         $sql = "SELECT * FROM EVENTS WHERE visibility = 'public' AND NOT EXISTS (
                   SELECT 1 
                   FROM RSVP
-                  WHERE RSVP.id = EVENTS.id
-              )";
-        $result = mysqli_query($conn,$sql);
+                  WHERE RSVP.event_id = EVENTS.event_id 
+                  AND RSVP.email = '$email')";
+        $result = mysqli_query($conn, $sql);
 
         if (mysqli_num_rows($result) > 0) {
             echo "<br>";
             while ($row = mysqli_fetch_assoc($result)) {
-                echo "Event Name: ".$row['name']."<br>";
-                echo "Description: ".$row['description']."<br>";
-                echo "Date: ".$row['date']."<br>";
-                echo "Time: ".$row['time']."<br>";
-                echo "Location: ".$row['location']."<br>";
-                // echo "Visibility: ".$row['visibility']."<br><br>";
-                echo "<form method='POST' action=''>";
-                echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['id']) . "'>";
-                echo "<input type='hidden' name='name' value='" . htmlspecialchars($row['name']) . "'>";
-                echo "<input type='hidden' name='description' value='" . htmlspecialchars($row['description']) . "'>";
-                echo "<input type='hidden' name='date' value='" . htmlspecialchars($row['date']) . "'>";
-                echo "<input type='hidden' name='time' value='" . htmlspecialchars($row['time']) . "'>";
-                echo "<input type='hidden' name='location' value='" . htmlspecialchars($row['location']) . "'>";
-                echo "<input type='hidden' name='booking_cap' value='" . htmlspecialchars($row['booking_cap']) . "'>";
-                echo "<input type='submit' name='action' value='RSVP'><br><br>";
-                echo "</form>";
+                $id = $row['event_id'];
+                $sql4 = "SELECT * FROM RSVP WHERE event_id ='$id'";
+                $result2 = mysqli_query($conn, $sql4);
+                $f_result = mysqli_num_rows($result2);
+
+                if ($f_result < $row['booking_cap']) {
+
+                    echo "Event Name: ".$row['name']."<br>";
+                    echo "Description: ".$row['description']."<br>";
+                    echo "Date: ".$row['date']."<br>";
+                    echo "Time: ".$row['time']."<br>";
+                    echo "Location: ".$row['location']."<br>";
+                    // echo "Visibility: ".$row['visibility']."<br><br>";
+                    echo "<form method='POST' action=''>";
+                    echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['event_id']) . "'>";
+                    echo "<input type='hidden' name='name' value='" . htmlspecialchars($row['name']) . "'>";
+                    echo "<input type='hidden' name='description' value='" . htmlspecialchars($row['description']) . "'>";
+                    echo "<input type='hidden' name='date' value='" . htmlspecialchars($row['date']) . "'>";
+                    echo "<input type='hidden' name='time' value='" . htmlspecialchars($row['time']) . "'>";
+                    echo "<input type='hidden' name='location' value='" . htmlspecialchars($row['location']) . "'>";
+                    echo "<input type='hidden' name='booking_cap' value='" . htmlspecialchars($row['booking_cap']) . "'>";
+                    echo "<input type='submit' name='action' value='RSVP'><br><br>";
+                    echo "</form>";
+                } else {
+                    echo "Booked to full capacity!";
+                }
+                
             }
             
         } else {
@@ -244,7 +263,8 @@ function up_events($conn){
     
         // Insert event details into the RSVP table
         $sql = "CREATE TABLE IF NOT EXISTS RSVP(
-                id CHAR(36) PRIMARY KEY,
+                id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                event_id CHAR(36) NOT NULL,
                 name VARCHAR(30) NOT NULL,
                 description VARCHAR(500) NOT NULL,
                 date DATE NOT NULL,
@@ -260,7 +280,7 @@ function up_events($conn){
             echo "Error: " . mysqli_error($conn);
         }
 
-        $sql2 = "INSERT INTO RSVP (id, name, description, date, time, location, booking_cap, email) 
+        $sql2 = "INSERT INTO RSVP (event_id, name, description, date, time, location, booking_cap, email) 
                  VALUES ('$id', '$name', '$description', '$date', '$time', '$location', '$booking_cap', '$email')";
         
         if (mysqli_query($conn, $sql2)){
@@ -272,17 +292,24 @@ function up_events($conn){
         $sql3 = "SELECT * FROM RSVP WHERE email = '$email'";
         $result = mysqli_query($conn,$sql3);
 
+
         if (mysqli_num_rows($result) > 0) {
             echo "<br><br>";
             while ($row = mysqli_fetch_assoc($result)) {
+                $id = $row['event_id'];
+                $sql4 = "SELECT * FROM RSVP WHERE event_id ='$id'";
+                $result2 = mysqli_query($conn, $sql4);
+                $f_result = mysqli_num_rows($result2);
+
                 echo "Event Name: ".$row['name']."<br>";
                 echo "Description: ".$row['description']."<br>";
                 echo "Date: ".$row['date']."<br>";
                 echo "Time: ".$row['time']."<br>";
                 echo "Location: ".$row['location']."<br>";
+                echo "Bookings: $f_result/".$row['booking_cap']."<br>";
 
                 echo "<form method='POST' action=''>";
-                echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['id']) . "'>";
+                echo "<input type='hidden' name='id' value='" . htmlspecialchars($id) . "'>";
                 echo "<input type='submit' name='action' value='cancel'><br><br>";
                 echo "</form>";
             }
@@ -297,7 +324,8 @@ function upc_events($conn){
     $email = $_SESSION['user_email'] ?? '';
 
     $sql = "CREATE TABLE IF NOT EXISTS RSVP(
-        id CHAR(36) PRIMARY KEY,
+        id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        event_id CHAR(36) NOT NULL,
         name VARCHAR(30) NOT NULL,
         description VARCHAR(500) NOT NULL,
         date DATE NOT NULL,
@@ -317,16 +345,22 @@ function upc_events($conn){
     $result = mysqli_query($conn, $sql3);
 
     if (mysqli_num_rows($result) > 0) {
-
+        echo "<br><br>";
         while ($row = mysqli_fetch_assoc($result)) {
+            $id = $row['event_id'];
+            $sql4 = "SELECT * FROM RSVP WHERE event_id ='$id'";
+            $result2 = mysqli_query($conn, $sql4);
+            $f_result = mysqli_num_rows($result2);
+
             echo "Event Name: ".$row['name']."<br>";
             echo "Description: ".$row['description']."<br>";
             echo "Date: ".$row['date']."<br>";
             echo "Time: ".$row['time']."<br>";
-            echo "Location: ".$row['location']."<br><br>";
+            echo "Location: ".$row['location']."<br>";
+            echo "Bookings: $f_result/".$row['booking_cap']."<br>";
 
             echo "<form method='POST' action=''>";
-            echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['id']) . "'>";
+            echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['event_id']) . "'>";
             echo "<input type='submit' name='action' value='cancel'><br><br>";
             echo "</form>";
         }
@@ -339,10 +373,24 @@ function delete_rsvp($conn){
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $id = mysqli_real_escape_string($conn, $_POST['id']);
 
-        $sql = "DELETE FROM RSVP WHERE id = '$id'";
+        $sql = "DELETE FROM RSVP WHERE event_id = '$id'";
 
         if (mysqli_query($conn, $sql)){
             echo "Canceled your booking :(";
+        } else{
+            echo "Error: " . mysqli_error($conn);
+        }
+    }
+}
+
+function delete_your_event($conn){
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
+
+        $sql = "DELETE FROM EVENTS WHERE event_id = '$id'";
+
+        if (mysqli_query($conn, $sql)){
+            echo "Deleted your event :(";
         } else{
             echo "Error: " . mysqli_error($conn);
         }
