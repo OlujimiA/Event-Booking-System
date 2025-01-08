@@ -237,7 +237,7 @@ function public_events($conn){
                     echo "<input type='submit' name='action' value='RSVP'><br><br>";
                     echo "</form>";
                 } else {
-                    echo "Booked to full capacity!";
+                    echo "Booked to full capacity!<br>";
                 }
                 
             }
