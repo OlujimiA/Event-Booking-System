@@ -168,12 +168,18 @@ function your_events($conn) {
         if (mysqli_num_rows($result) > 0) {
             echo "<br>";
             while ($row = mysqli_fetch_assoc($result)) {
+                $id = $row['event_id'];
+                $sql4 = "SELECT * FROM RSVP WHERE event_id ='$id'";
+                $result2 = mysqli_query($conn, $sql4);
+                $f_result = mysqli_num_rows($result2);
+                
                 echo "Event Name: ".$row['name']."<br>";
                 echo "Description: ".$row['description']."<br>";
                 echo "Date: ".$row['date']."<br>";
                 echo "Time: ".$row['time']."<br>";
                 echo "Location: ".$row['location']."<br>";
-                echo "Visibility: ".$row['visibility']."<br><br>";
+                echo "Visibility: ".$row['visibility']."<br>";
+                echo "Bookings: $f_result/".$row['booking_cap']."<br>";
 
                 echo "<form method='POST' action=''>";
                 echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['event_id']) . "'>";
