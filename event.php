@@ -96,6 +96,12 @@
             } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
                 // Delete your event
                 delete_your_event($conn);
+            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'Edit') {
+                //Edit your event
+                edit_your_event($conn);
+            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'Submit') {
+                // Update event
+                update_event($conn);
             } else {
                 // By default, show upcoming events
                 upc_events($conn);

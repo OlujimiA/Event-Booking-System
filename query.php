@@ -183,6 +183,14 @@ function your_events($conn) {
 
                 echo "<form method='POST' action=''>";
                 echo "<input type='hidden' name='id' value='" . htmlspecialchars($row['event_id']) . "'>";
+                echo "<input type='hidden' name='name' value='" . htmlspecialchars($row['name']) . "'>";
+                echo "<input type='hidden' name='description' value='" . htmlspecialchars($row['description']) . "'>";
+                echo "<input type='hidden' name='date' value='" . htmlspecialchars($row['date']) . "'>";
+                echo "<input type='hidden' name='time' value='" . htmlspecialchars($row['time']) . "'>";
+                echo "<input type='hidden' name='location' value='" . htmlspecialchars($row['location']) . "'>";
+                echo "<input type='hidden' name='visibility' value='" . htmlspecialchars($row['visibility']) . "'>";
+                echo "<input type='hidden' name='booking_cap' value='" . htmlspecialchars($row['booking_cap']) . "'>";
+                echo "<input type='submit' name='action' value='Edit'>";
                 echo "<input type='submit' name='action' value='delete'><br><br>";
                 echo "</form>";
             }
@@ -400,6 +408,70 @@ function delete_your_event($conn){
         } else{
             echo "Error: " . mysqli_error($conn);
         }
+    }
+}
+
+function edit_your_event($conn){
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
+        $EventName = mysqli_real_escape_string($conn, $_POST['name']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        $date = mysqli_real_escape_string($conn, $_POST['date']);
+        $time = mysqli_real_escape_string($conn, $_POST['time']);
+        $Location = mysqli_real_escape_string($conn, $_POST['location']);
+        $booking_cap = mysqli_real_escape_string($conn, $_POST['booking_cap']);
+        $visibility = mysqli_real_escape_string($conn, $_POST['visibility']);
+
+        echo "<form method='post' action=''>";
+        echo "<br><label for='name'>Event title:</label><br>";
+        echo "<input type='text' id='name' name='name' value='$EventName'><br><br>";
+        echo "<label for='description'>Event description:</label><br>";
+        echo "<textarea id='description' name='description' value='$description'>$description</textarea><br><br>";
+        echo "<label for='date'>Event date:</label><br>";
+        echo "<input type='date' id='date' name='date' value='$date'><br><br>";
+        echo "<label for='time'>Event time:</label><br>";
+        echo "<input type='time' id='time' name='time' value='$time'><br><br>";
+        echo "<label for='location'>Event location:</label><br>";
+        echo "<input type='location' id='location' name='location' value='$Location'><br><br>";
+        echo "<label for='visibility'>Event visibility:</label><br>";
+        if ($visibility == 'public') {
+            echo "<select name='visibility' id='visibility'>";
+            echo "<option value='public' selected>Public</option>";
+            echo "<option value='private'>Private</option>";
+            echo "</select><br><br>";
+        } else {
+            echo "<select name='visibility' id='visibility'>";
+            echo "<option value='public'>Public</option>";
+            echo "<option value='private' selected>Private</option>";
+            echo "</select><br><br>";
+        }
+        echo "<label for='booking_cap'>Booking capacity:</label><br>";
+        echo "<input type='number' id='booking_cap' name='booking_cap' value='$booking_cap'><br><br>";
+        echo "<input type='hidden' id='event_id' name='event_id' value='$id'>";
+        echo "<input type='submit' name='action' value='Submit'>";
+        echo "<input type='submit' name='action' value='Cancel'>";
+        echo "</form>";
+    }
+}
+
+function update_event($conn) {
+    $id = mysqli_real_escape_string($conn, $_POST['event_id']);
+    $EventName = mysqli_real_escape_string($conn, $_POST['name']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $date = mysqli_real_escape_string($conn, $_POST['date']);
+    $time = mysqli_real_escape_string($conn, $_POST['time']);
+    $Location = mysqli_real_escape_string($conn, $_POST['location']);
+    $booking_cap = mysqli_real_escape_string($conn, $_POST['booking_cap']);
+    $visibility = mysqli_real_escape_string($conn, $_POST['visibility']);
+
+    $sql = "UPDATE EVENTS
+            SET name = '$EventName', description = '$description', date = '$date', time = '$time', location = '$Location', visibility = '$visibility', booking_cap = '$booking_cap'
+            WHERE event_id = '$id'";
+
+    if (mysqli_query($conn, $sql)) {
+        echo "Edited the event successfully!";
+    } else {
+        echo "Error: ". mysqli_error($cconn);
     }
 }
 
