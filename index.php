@@ -26,12 +26,12 @@ require 'query.php';
         <label for="password">Password:</label><br>
         <input type="password" id="password" name="password" required><br><br>
         
-        <label for="ptype">What describes you best?</label><br>
+        <label for="ptype">What is your club position?</label><br>
         <select name="ptype" id="ptype">
-            <option value="" disabled selected>Choose what describes you best</option>
-            <option value="Student">Student</option>
-            <option value="Teacher">Teacher</option>
-            <option value="Other">Other</option>
+            <option value="" disabled selected>Select your position</option>
+            <option value="executive">Executive</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="member">Member</option>
         </select><br><br>
         
         <button id="submit">Submit</button> 
@@ -39,5 +39,4 @@ require 'query.php';
     <p>Already have an account? Login <a href="login.php" title="Go to our login page">here</a></p>
 </body>
 </html>
-
 
