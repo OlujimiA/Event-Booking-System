@@ -191,7 +191,8 @@ function your_events($conn) {
                 echo "<input type='hidden' name='visibility' value='" . htmlspecialchars($row['visibility']) . "'>";
                 echo "<input type='hidden' name='booking_cap' value='" . htmlspecialchars($row['booking_cap']) . "'>";
                 echo "<input type='submit' name='action' value='Edit'>";
-                echo "<input type='submit' name='action' value='delete'><br><br>";
+                echo "<input type='submit' name='action' value='delete'>";
+                echo "<input type='submit' name='action' value='Send an Invite'><br><br>";
                 echo "</form>";
             }
             
@@ -475,4 +476,69 @@ function update_event($conn) {
     }
 }
 
+function Invite($conn){
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
+        $fullname = $_SESSION['user_name'];
+        $s_email = $_SESSION['user_email'];
+
+        echo "Copy this event id and send it to your invitee. ID = $id<br><br>";
+        echo "<b>OR</b><br><br>";
+        echo "<div>";
+            echo "<form method='post' action=''>";
+                echo "<b>Submit this form:<br></b>";
+                echo "<label for='email'>Invitee's email:</label><br>";
+                echo "<input type='email' placeholder='example@domain.com' required id='email' name='i_email'><br><br>";
+                echo "<input type='hidden' name='id' value='$id'>";
+                echo "<input type='hidden' name='name' value='$fullname'>";
+                echo "<input type='hidden' name='s_email' value='$s_email'>";
+                echo "<input type='submit' name ='action' value='Send'><br><br>";
+            echo "</form>";
+        echo "</div>";
+    }
+}
+
+function received_invite($conn){
+   if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
+        $s_fullname = mysqli_real_escape_string($conn, $_POST['name']);
+        $s_email = mysqli_real_escape_string($conn, $_POST['s_email']);
+        $i_email = mysqli_real_escape_string($conn, $_POST['i_email']);
+
+        $sql = "CREATE TABLE IF NOT EXISTS INVITE(
+                id int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                event_id VARCHAR(350) NOT NULL,
+                inviter_name VARCHAR(100) NOT NULL,
+                inviter_email VARCHAR(250) NOT NULL,
+                invitee_name VARCHAR(100) NOT NULL, 
+                invitee_email VARCHAR(250) NOT NULL,
+                time_invite_sent TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
+        
+        if (mysqli_query($conn, $sql)) {
+            echo "Invite table has been created!";
+        } else {
+            echo "Error: ". mysqli_error($conn);
+        }
+
+        $sql2 = "SELECT * FROM USERS WHERE email = '$i_email'";
+        $result = mysqli_query($conn, $sql2);
+
+        if (mysqli_num_rows($result)>0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $i_fullname = $row['firstname'] . ' ' . $row['lastname'];
+            }
+            $sql3 = "INSERT INTO INVITE(event_id, inviter_name, inviter_email, invitee_name, invitee_email) 
+                    VALUES ('$id','$s_fullname','$s_email','$i_fullname','$i_email')";
+
+            if (mysqli_query($conn, $sql3)){
+                echo "Invite has been sent!";
+            } else{
+                echo "Error: ". mysqli_error($conn);
+            }
+        } else {
+            "Account associated with that email doesn't exist.";
+        }
+        
+   } 
+}
 ?>
