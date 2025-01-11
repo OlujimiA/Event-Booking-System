@@ -228,6 +228,7 @@ function public_events($conn){
         if (mysqli_num_rows($result) > 0) {
             echo "<br>";
             while ($row = mysqli_fetch_assoc($result)) {
+                //Bookings
                 $id = $row['event_id'];
                 $sql4 = "SELECT * FROM RSVP WHERE event_id ='$id'";
                 $result2 = mysqli_query($conn, $sql4);
@@ -252,7 +253,7 @@ function public_events($conn){
                     echo "<input type='submit' name='action' value='RSVP'><br><br>";
                     echo "</form>";
                 } else {
-                    echo htmlspecialchars($row['name'])." has been booked to full capacity!<BR>";
+                    echo htmlspecialchars($row['name'])." has been booked to full capacity!<br>";
                 }
                 
             }
@@ -384,7 +385,7 @@ function upc_events($conn){
     }
 }
 
-function delete_rsvp($conn){
+function cancel_rsvp($conn){
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $id = mysqli_real_escape_string($conn, $_POST['id']);
 
@@ -482,7 +483,7 @@ function Invite($conn){
         $fullname = $_SESSION['user_name'];
         $s_email = $_SESSION['user_email'];
 
-        echo "Copy this event id and send it to your invitee. ID = $id<br><br>";
+        echo "<b>Copy</b> this event id and send it to your invitee. ID = <b>$id</b><br><br>";
         echo "<b>OR</b><br><br>";
         echo "<div>";
             echo "<form method='post' action=''>";

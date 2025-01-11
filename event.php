@@ -92,7 +92,7 @@
                 up_events($conn);
             } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'cancel') {
                 // Delete rsvp/Cancel booking
-                delete_rsvp($conn);
+                cancel_rsvp($conn);
             } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
                 // Delete your event
                 delete_your_event($conn);
