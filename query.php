@@ -56,9 +56,6 @@ function login($conn) {
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_name'] = $user['firstname'] . ' ' . $user['lastname'];
                 $_SESSION['user_type'] = $user['user_type'];
-        
-                echo "Login successful!<br>";
-                header('Location: event.php');
                 
                 $sql = 'CREATE TABLE IF NOT EXISTS LOGS(
                     id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -68,20 +65,23 @@ function login($conn) {
                     last_loggedin TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )';
             
-                    if (mysqli_query($conn, $sql)) {
-                        echo "LOG table has been created<br>";
-                    } else {
-                        echo "Error: " . mysqli_error($conn);
-                    }
+                if (mysqli_query($conn, $sql)) {
+                    echo "LOG table has been created<br>";
+                } else {
+                    echo "Error: " . mysqli_error($conn);
+                }
                     
-                    $sql2 = "INSERT INTO LOGS(firstname, lastname, email)
-                            VALUES ('" . $user['firstname'] . "', '" . $user['lastname'] . "', '" . $email . "')";
+                $sql2 = "INSERT INTO LOGS(firstname, lastname, email)
+                        VALUES ('" . $user['firstname'] . "', '" . $user['lastname'] . "', '" . $email . "')";
             
-                    if (mysqli_query($conn, $sql2)){
-                        echo "LOGS table has been updated!<br>";
-                    }else {
-                        echo "Error: ". mysqli_error($conn);
-                    }
+                if (mysqli_query($conn, $sql2)){
+                    echo "LOGS table has been updated!<br>";
+                } else {
+                    echo "Error: ". mysqli_error($conn);
+                }
+
+                echo "Login successful!<br>";
+                header('Location: event.php');
 
             } else {
                 echo "Invalid password!";
@@ -211,6 +211,7 @@ function your_events($conn) {
                 echo "<input type='hidden' name='visibility' value='" . htmlspecialchars($row['visibility']) . "'>";
                 echo "<input type='hidden' name='booking_cap' value='" . htmlspecialchars($row['booking_cap']) . "'>";
                 echo "<input type='hidden' name='club_name' value='" . htmlspecialchars($row['club_name']) . "'>";
+                echo "<input type='hidden' name='status' value='" . htmlspecialchars($row['status']) . "'>";
                 echo "<input type='submit' name='action' value='Edit'>";
                 echo "<input type='submit' name='action' value='delete'>";
                 echo "<input type='submit' name='action' value='Send an Invite'><br><br>";
@@ -592,39 +593,48 @@ function Invite($conn){
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $id = mysqli_real_escape_string($conn, $_POST['id']);
         $event_name = mysqli_real_escape_string($conn, $_POST['name']);
+        $status = mysqli_real_escape_string($conn, $_POST['status']);
         $fullname = $_SESSION['user_name'];
         $s_email = $_SESSION['user_email'];
+        $s_user_type = $_SESSION['user_type'];
 
-        $sql = "CREATE TABLE IF NOT EXISTS INVITE(
-            id int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            event_id VARCHAR(350) NOT NULL,
-            event_name VARCHAR(500) NOT NULL,
-            inviter_name VARCHAR(100) NOT NULL,
-            inviter_email VARCHAR(250) NOT NULL,
-            invitee_name VARCHAR(100) NOT NULL, 
-            invitee_email VARCHAR(250) NOT NULL,
-            status VARCHAR(30) NOT NULL,
-            club_name VARCHAR(500) NOT NULL,
-            time_invite_sent TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
-    
-        if (mysqli_query($conn, $sql)) {
-            echo "Invite table has been created!";
+        if ($status == 'verified') {
+            $sql = "CREATE TABLE IF NOT EXISTS INVITE(
+                id int(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                event_id VARCHAR(350) NOT NULL,
+                event_name VARCHAR(500) NOT NULL,
+                inviter_name VARCHAR(100) NOT NULL,
+                inviter_email VARCHAR(250) NOT NULL,
+                inviter_user_type VARCHAR(30) NOT NULL,
+                invitee_name VARCHAR(100) NOT NULL, 
+                invitee_email VARCHAR(250) NOT NULL,
+                status VARCHAR(30) NOT NULL,
+                club_name VARCHAR(500) NOT NULL,
+                time_invite_sent TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
+        
+            if (mysqli_query($conn, $sql)) {
+                echo "Invite table has been created!";
+            } else {
+                echo "Error: ". mysqli_error($conn);
+            }
+
+            echo "<div>";
+                echo "<form method='post' action=''>";
+                    echo "<b>Submit this form:<br><br></b>";
+                    echo "<label for='email'>Invitee's email:</label><br>";
+                    echo "<input type='email' placeholder='example@domain.com' required id='email' name='i_email'><br><br>";
+                    echo "<input type='hidden' name='id' value='$id'>";
+                    echo "<input type='hidden' name='name' value='$fullname'>";
+                    echo "<input type='hidden' name='s_email' value='$s_email'>";
+                    echo "<input type='hidden' name='s_user_type' value='$s_user_type'>";
+                    echo "<input type='hidden' name='event_name' value='$event_name'>";
+                    echo "<input type='submit' name ='action' value='Send'><br><br>";
+                echo "</form>";
+            echo "</div>";
+
         } else {
-            echo "Error: ". mysqli_error($conn);
+            echo "Your event has not been verified by a Club executive or supervisor.<br>Unable to send invite.";
         }
-
-        echo "<div>";
-            echo "<form method='post' action=''>";
-                echo "<b>Submit this form:<br><br></b>";
-                echo "<label for='email'>Invitee's email:</label><br>";
-                echo "<input type='email' placeholder='example@domain.com' required id='email' name='i_email'><br><br>";
-                echo "<input type='hidden' name='id' value='$id'>";
-                echo "<input type='hidden' name='name' value='$fullname'>";
-                echo "<input type='hidden' name='s_email' value='$s_email'>";
-                echo "<input type='hidden' name='event_name' value='$event_name'>";
-                echo "<input type='submit' name ='action' value='Send'><br><br>";
-            echo "</form>";
-        echo "</div>";
     }
 }
 
@@ -634,6 +644,7 @@ function sending_invite($conn){
         $event_name = mysqli_real_escape_string($conn, $_POST['event_name']);
         $s_fullname = mysqli_real_escape_string($conn, $_POST['name']);
         $s_email = mysqli_real_escape_string($conn, $_POST['s_email']);
+        $s_user_type = mysqli_real_escape_string($conn, $_POST['s_user_type']);
         $i_email = mysqli_real_escape_string($conn, $_POST['i_email']);
 
         $sql = "CREATE TABLE IF NOT EXISTS INVITE(
@@ -642,6 +653,7 @@ function sending_invite($conn){
                 event_name VARCHAR(500) NOT NULL,
                 inviter_name VARCHAR(100) NOT NULL,
                 inviter_email VARCHAR(250) NOT NULL,
+                inviter_user_type VARCHAR(30) NOT NULL,
                 invitee_name VARCHAR(100) NOT NULL, 
                 invitee_email VARCHAR(250) NOT NULL,
                 status VARCHAR(30) NOT NULL,
@@ -664,8 +676,8 @@ function sending_invite($conn){
             while ($row = mysqli_fetch_assoc($result)) {
                 $i_fullname = $row['firstname'] . ' ' . $row['lastname'];
             }
-            $sql3 = "INSERT INTO INVITE(event_id, event_name, inviter_name, inviter_email, invitee_name, invitee_email, status) 
-                    VALUES ('$id', '$event_name','$s_fullname','$s_email','$i_fullname','$i_email', '$status')";
+            $sql3 = "INSERT INTO INVITE(event_id, event_name, inviter_name, inviter_email, inviter_user_type, invitee_name, invitee_email, status) 
+                    VALUES ('$id', '$event_name','$s_fullname','$s_email', '$s_user_type','$i_fullname','$i_email', '$status')";
 
             if (mysqli_query($conn, $sql3)){
                 echo "Invite has been sent!";
@@ -686,6 +698,7 @@ function received_invite($conn){
         event_name VARCHAR(500) NOT NULL,
         inviter_name VARCHAR(100) NOT NULL,
         inviter_email VARCHAR(250) NOT NULL,
+        inviter_user_type VARCHAR(30) NOT NULL,
         invitee_name VARCHAR(100) NOT NULL, 
         invitee_email VARCHAR(250) NOT NULL,
         status VARCHAR(30) NOT NULL,
@@ -699,14 +712,14 @@ function received_invite($conn){
     }
 
     $email = $_SESSION['user_email'] ?? '';
-    $user_type = $_SESSION['user_type'] ?? '';
+    // $user_type = $_SESSION['user_type'] ?? '';
     $sql = "SELECT * FROM INVITE WHERE invitee_email = '$email' AND status = 'pending'";
     $result = mysqli_query($conn, $sql);
 
     if (mysqli_num_rows($result)>0) {
         while ($row = mysqli_fetch_assoc($result)) {
             echo "<br>You have been invited to ".$row['event_name']."<br>";
-            echo "by ".$row['inviter_name'].", the Club $user_type of "; 
+            echo "by ".$row['inviter_name'].", the Club ". $row['inviter_user_type']." of "; 
             $invite_id = $row['id'];
             
             $sql2 = "SELECT * FROM EVENTS WHERE event_id = '".$row['event_id']."'";
@@ -717,7 +730,7 @@ function received_invite($conn){
                 echo "The event takes place at ".$row2['location']."<br>by ".$row2['time']."<br><br>";
                 echo "<form method='post' action=''>";
                 echo "<label for='invite'>Accept Invite (y/n):</label><br>";
-                echo "<input type='text' name='invite' id='invite' required placeholder='Enter y or n'><br>";
+                echo "<input type='text' name='invite' id='invite' required placeholder='Enter y or n'><br><br>";
                 echo "<input type='hidden' name='id' value='" . htmlspecialchars($row2['event_id']) . "'>";
                     echo "<input type='hidden' name='invite_id' value='" . htmlspecialchars($invite_id) . "'>";
                     echo "<input type='hidden' name='name' value='" . htmlspecialchars($row2['name']) . "'>";
@@ -727,7 +740,7 @@ function received_invite($conn){
                     echo "<input type='hidden' name='location' value='" . htmlspecialchars($row2['location']) . "'>";
                     echo "<input type='hidden' name='booking_cap' value='" . htmlspecialchars($row2['booking_cap']) . "'>";
                     echo "<input type='hidden' name='club_name' value='" . htmlspecialchars($row2['club_name']) . "'>";
-                echo "<input type='submit' name='action' value='Confirm'>";
+                echo "<input type='submit' name='action' value='Confirm'><br>";
                 echo "</form>";
 
             } else {
