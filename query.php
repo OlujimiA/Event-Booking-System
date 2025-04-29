@@ -335,12 +335,12 @@ function up_events($conn){
 
         if ($user_type != 'member') {
             $sql3 = "SELECT * FROM EVENTS WHERE status= 'unverified'";
-            $result = mysqli_query($conn, $sql3);
+            $result2 = mysqli_query($conn, $sql3);
 
-            if (mysqli_num_rows($result) > 0) {
+            if (mysqli_num_rows($result2) > 0) {
                 echo "<br><br>";
-                while ($row = mysqli_fetch_assoc($result2)){
-                    $id = $row['event_id'];
+                while ($row2 = mysqli_fetch_assoc($result2)){
+                    $id = $row2['event_id'];
                     echo "Event Name: ".$row2['name']."<br>";
                     echo "Description: ".$row2['description']."<br>";
                     echo "Club: ".$row2['club_name']."<br>";
@@ -585,7 +585,7 @@ function update_event($conn) {
     if (mysqli_query($conn, $sql)) {
         echo "Edited the event successfully!";
     } else {
-        echo "Error: ". mysqli_error($cconn);
+        echo "Error: ". mysqli_error($conn);
     }
 }
 
